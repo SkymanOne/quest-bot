@@ -27,8 +27,8 @@ class Task(BaseModel):
     task_game = ManyToManyField(Game)
     task_level = IntegerField()
     task_bonus = IntegerField()
-    task_photo = BlobField()
-    task_file = BlobField()
+    task_photo = BlobField(null=True)
+    task_file = BlobField(null=True)
 
 
 class User(BaseModel):
