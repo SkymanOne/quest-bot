@@ -12,8 +12,8 @@ def create_game(name, description, timer, score):
         my_loging.error('Ошибка создания игры: ' + name)
     else:
         my_loging.info('Создана игра: ' + name
-                       + '\nописание: ' + description
-                       + '\nтаймер: ' + str(timer) + ' макс. счет: ' + str(score))
+                       + ' - описание: ' + description
+                       + ' - таймер: ' + str(timer) + ' макс. счет: ' + str(score))
 
 
 def search_game(name: str):
@@ -37,27 +37,46 @@ def delete_game(name: str):
     game = search_game(name)
     if game is not None:
         game.delete()
-        my_loging.info('Игра ' + name + ' успешно удалена')
+        my_loging.info('Игра - ' + name + ' - успешно удалена')
+        return True
     else:
         my_loging.error('Ошибка удаление игры')
+        return False
 
 
-def create_task(text: str, answer: str, game_name: str, level: int,
-                bonus: int, photo, file):
-    game = search_game(game_name)
-    if game is None:
-        my_loging.error('Ошибка создания задания')
+def create_task(text: str, answer: str, game_name: str,
+                bonus: int, photo=None, file=None):
+    global new_task
+    try:
+        game = search_game(game_name)
+        if game is not None:
+            level = Task.get_levels_of_game(game_name) + 1
+            if photo is not None:
+                new_task = Task.create(task_text=text, task_answer=answer,
+                                       task_level=level, task_bonus=bonus,
+                                       task_photo=photo)
+            elif file is not None:
+                new_task = Task.create(task_text=text, task_answer=answer,
+                                       task_level=level, task_bonus=bonus,
+                                       task_file=file)
+            elif file is not None and photo is not None:
+                new_task = Task.create(task_text=text, task_answer=answer,
+                                       task_level=level, task_bonus=bonus,
+                                       task_photo=photo, task_file=file)
+            else:
+                new_task = Task.create(task_text=text, task_answer=answer,
+                                       task_level=level, task_bonus=bonus)
+            new_task.task_game.add([game])
+            new_task.save()
+            my_loging.info('Создано задание в игре - ' + game_name)
+        else:
+            my_loging.error('Ошибка создания задания')
+            return None
+    except Exception:
+        my_loging.error('Ошибка создания создания')
         return None
     else:
-        try:
-            new_task = Task.create(task_text=text, task_answer=answer, task_game=game,
-                                   task_level=level, task_bonus=bonus,
-                                   task_photo=photo, task_file=file)
-        except Exception:
-            my_loging.error('Ошибка создания создания')
-            return None
-        else:
-            return new_task
+        return new_task
 
 
 def get_task(game_name: str, level: int):
@@ -81,7 +100,7 @@ def get_list_of_game_tasks(game_name: str):
         my_loging.error('Ошибка получения списка заданий')
         return None
     else:
-        list_task = Task.select().where(Task.task_game == game)
+        list_task = Task.get(Task.task_game == game)
     return list_task
 
 

@@ -24,11 +24,16 @@ class Game(BaseModel):
 class Task(BaseModel):
     task_text = TextField()
     task_answer = TextField()
-    task_game = ManyToManyField(Game)
+    task_game = ManyToManyField(Game, backref='tasks')
     task_level = IntegerField()
     task_bonus = IntegerField()
-    task_photo = BlobField(null=True)
-    task_file = BlobField(null=True)
+    task_photo = BlobField(null=True, default=None)
+    task_file = BlobField(null=True, default=None)
+
+    @classmethod
+    def get_levels_of_game(cls, game_name):
+        level = Game.get(Game.game_name == game_name).tasks.count()
+        return level
 
 
 class User(BaseModel):
