@@ -50,23 +50,13 @@ def create_task(text: str, answer: str, game_name: str,
     try:
         game = search_game(game_name)
         if game is not None:
-            level = Task.get_levels_of_game(game_name) + 1
-            if photo is not None:
-                new_task = Task.create(task_text=text, task_answer=answer,
-                                       task_level=level, task_bonus=bonus,
-                                       task_photo=photo)
-            elif file is not None:
-                new_task = Task.create(task_text=text, task_answer=answer,
-                                       task_level=level, task_bonus=bonus,
-                                       task_file=file)
-            elif file is not None and photo is not None:
-                new_task = Task.create(task_text=text, task_answer=answer,
-                                       task_level=level, task_bonus=bonus,
-                                       task_photo=photo, task_file=file)
-            else:
-                new_task = Task.create(task_text=text, task_answer=answer,
-                                       task_level=level, task_bonus=bonus)
+            level = Task.get_levels_of_game(game_name).count() + 1
+            new_task = Task.create(task_text=text, task_answer=answer,
+                                   task_level=level, task_bonus=bonus,
+                                   task_photo=photo, task_file=file)
             new_task.task_game.add([game])
+            game.max_score += bonus
+            game.save()
             new_task.save()
             my_loging.info('Создано задание в игре - ' + game_name)
         else:
@@ -81,12 +71,17 @@ def create_task(text: str, answer: str, game_name: str,
 
 def get_task(game_name: str, level: int):
     game = search_game(game_name)
+    global task
     if game is None:
         my_loging.error('Ошибка поиска задания')
         return None
     else:
         try:
-            task = Task.get(Task.task_game == game and Task.task_level == level)
+            tasks = get_tasks_of_game(game_name)
+            for t in tasks:
+                if t.task_level == level:
+                    task = t
+            print(task.task_text)
         except Exception:
             my_loging.error('Ошибка поиска задания')
             return None
@@ -94,17 +89,20 @@ def get_task(game_name: str, level: int):
             return task
 
 
-def get_list_of_game_tasks(game_name: str):
-    game = search_game(game_name)
-    if game is None:
-        my_loging.error('Ошибка получения списка заданий')
-        return None
-    else:
-        list_task = Task.get(Task.task_game == game)
-    return list_task
+def get_tasks_of_game(game_name: str):
+    try:
+        level = Game.get(Game.game_name == game_name).tasks
+    except Game.DoesNotExist:
+        my_loging.error('Ошибка поиска задания')
+        return False
+    return level
 
 
 def delete_task(game_name: str, level: int):
     task = get_task(game_name, level)
     if task is None:
         my_loging.error('Ошибка удаление задания под номером: ' + str(level))
+        return False
+    else:
+        task.delete_instance()
+        my_loging.error('Удаление задания под номером: ' + str(level))

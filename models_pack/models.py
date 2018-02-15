@@ -30,11 +30,6 @@ class Task(BaseModel):
     task_photo = BlobField(null=True, default=None)
     task_file = BlobField(null=True, default=None)
 
-    @classmethod
-    def get_levels_of_game(cls, game_name):
-        level = Game.get(Game.game_name == game_name).tasks.count()
-        return level
-
 
 class User(BaseModel):
     user_name = CharField()
