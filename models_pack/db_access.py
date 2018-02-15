@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+# -*- coding: utf8 -*-
 from models_pack.models import *
 import my_loging
 import mypy

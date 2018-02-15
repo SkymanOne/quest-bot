@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+# -*- coding: utf8 -*-
 from peewee import *
 from playhouse.migrate import *
 from playhouse.fields import *

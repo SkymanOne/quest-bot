@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+# -*- coding: utf8 -*-
 import click
 import my_loging
 from models_pack import db_access
