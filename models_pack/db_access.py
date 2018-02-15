@@ -50,7 +50,7 @@ def create_task(text: str, answer: str, game_name: str,
     try:
         game = search_game(game_name)
         if game is not None:
-            level = Task.get_levels_of_game(game_name).count() + 1
+            level = get_tasks_of_game(game_name).count() + 1
             new_task = Task.create(task_text=text, task_answer=answer,
                                    task_level=level, task_bonus=bonus,
                                    task_photo=photo, task_file=file)
@@ -91,11 +91,11 @@ def get_task(game_name: str, level: int):
 
 def get_tasks_of_game(game_name: str):
     try:
-        level = Game.get(Game.game_name == game_name).tasks
+        levels = Game.get(Game.game_name == game_name).tasks
     except Game.DoesNotExist:
         my_loging.error('Ошибка поиска задания')
         return False
-    return level
+    return levels
 
 
 def delete_task(game_name: str, level: int):

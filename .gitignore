@@ -113,8 +113,8 @@ venv.bak/
 .mypy_cache/
 
 .DS_Store
-.testvenv/
 
 .gitignore
 vneurokabot.db
 /models_pack/vneurokabot.db
+/testvenv/

@@ -42,6 +42,7 @@ def del_game(name):
 @click.option('--answer', '-a', type=str, help='Answer of task', prompt=True)
 @click.option('--bonus', '-b', type=int, help='Bonus of task', prompt=True)
 def reg_task(game_name, text, answer, bonus):
+    """Add task for game."""
     my_loging.info('Ввод данных задания для регистрации')
     result = db_access.create_task(text, answer, game_name, bonus)
     if result is not None:
@@ -49,6 +50,27 @@ def reg_task(game_name, text, answer, bonus):
                    ' успешно добавлено')
     else:
         click.echo('Ошибка добавления задания')
+
+
+@cli.command()
+@click.option('--name', '-n', type=str, help='Name of your game', prompt=True)
+def get_tasks(name):
+    """Get tasks of your game."""
+    my_loging.info('Ввод данных вывода заданий')
+    tasks = db_access.get_tasks_of_game(name)
+    if tasks is not False:
+        for t in tasks:
+            m = t.task_text
+            l = t.task_level
+            a = t.task_answer
+            b = t.task_bonus
+            click.echo('\n --------------- \n' +
+                       'Text - ' + m + '\nLevel - ' + str(l) +
+                       '\nAnswer - ' + a +
+                       '\nBonus - ' + str(b))
+    else:
+        my_loging.error('Ошибка вывода заданий игры')
+        click.echo('Ошибка вывода заданий задания')
 
 
 if __name__ == '__main__':
