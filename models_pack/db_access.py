@@ -112,6 +112,4 @@ def delete_task(game_name: str, level: int):
             if t.task_level > level:
                 t.task_level -= 1
                 t.save()
-            print(t.task_level)
-            print(t.task_text + '\n')
         my_loging.error('Удаление задания под номером: ' + str(level))

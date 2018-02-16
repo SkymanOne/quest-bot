@@ -75,5 +75,17 @@ def get_tasks(name):
         click.echo('Ошибка вывода заданий задания')
 
 
+@cli.command()
+@click.option('--name', '-n', type=str, help='Name of your game', prompt=True)
+@click.option('--level', '-l', type=int, help='Delete level of your game', prompt=True)
+def del_task(name, level):
+    """Delete task of your game."""
+    my_loging.info('Ввод данных для удаления задания')
+    if db_access.delete_task(name, level) is False:
+        click.echo('Ошибка удаления задания')
+    else:
+        click.echo('Уровень ' + str(level) + ' успешно удален')
+
+
 if __name__ == '__main__':
     cli()
