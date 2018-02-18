@@ -7,6 +7,7 @@ import os
 
 
 def create_game(name, description, timer, score):
+    my_loging.info('Вызов метода создания игры')
     try:
         Game.create(game_name=name, game_description=description,
                     game_timer=timer, max_score=score)
@@ -19,6 +20,7 @@ def create_game(name, description, timer, score):
 
 
 def search_game(name: str):
+    my_loging.info('Вызов метода поиск игры')
     """
 
     :param name: string name of your game
@@ -36,6 +38,7 @@ def search_game(name: str):
 
 
 def delete_game(name: str):
+    my_loging.info('Вызов метода удаления игры')
     game = search_game(name)
     if game is not None:
         tasks = get_tasks_of_game(name)
@@ -51,6 +54,7 @@ def delete_game(name: str):
 
 def create_task(text: str, answer: str, game_name: str,
                 bonus: int, photo=None, file=None):
+    my_loging.info('Вызов метода создания задания')
     global new_task
     try:
         game = search_game(game_name)
@@ -75,6 +79,7 @@ def create_task(text: str, answer: str, game_name: str,
 
 
 def get_task(game_name: str, level: int):
+    my_loging.info('Вызов метода получения задания')
     game = search_game(game_name)
     global task
     if game is None:
@@ -95,6 +100,7 @@ def get_task(game_name: str, level: int):
 
 
 def get_tasks_of_game(game_name: str):
+    my_loging.info('Вызов метода получения списка заданий игры')
     try:
         levels = Game.get(Game.game_name == game_name).tasks
     except Game.DoesNotExist:
@@ -104,6 +110,7 @@ def get_tasks_of_game(game_name: str):
 
 
 def delete_task(game_name: str, level: int):
+    my_loging.info('Вызов метода удаления задания')
     task = get_task(game_name, level)
     if task is None:
         my_loging.error('Ошибка удаление задания под номером: ' + str(level))
@@ -134,7 +141,18 @@ def create_user(name, telegram_id, game_name, game_start=None):
         my_loging.error('Ошибка поиска игры')
         return False
 
-# TODO: метод для создание пользователя
+
+def get_user(telegram_id):
+    my_loging.info('Вызов метода для получение пользователя')
+    try:
+        my_loging.info('Поиск пользователя с id ' + str(telegram_id) + ' в базе данных')
+        user = User.get(User.user_telegram_id == telegram_id)
+    except DoesNotExist:
+        my_loging.error('Пользователь не найден')
+        return None
+    else:
+        return user
+
 # TODO: метод для удаления пользователя
 # TODO: метод для добавления победителя
 # TODO: метод для удаление победителя
