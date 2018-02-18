@@ -117,7 +117,24 @@ def delete_task(game_name: str, level: int):
                 t.save()
         my_loging.error('Удаление задания под номером: ' + str(level))
 
+
+def create_user(name, telegram_id, game_name, game_start=None):
+    my_loging.info('Вызов метода создания пользователя')
+    game = search_game(game_name)
+    if game is not None:
+        try:
+            my_loging.info('Регистрация нового пользователя')
+            User.create(user_name=name, user_telegram_id=telegram_id,
+                        user_current_game=game, user_game_start=game_start)
+            my_loging.info('Пользователь ' + name + ' успешно зарегистрирован')
+            return True
+        except Exception:
+            my_loging.error('Ошибка регистрации нового пользователя')
+    else:
+        my_loging.error('Ошибка поиска игры')
+        return False
+
 # TODO: метод для создание пользователя
-# TODO: метод для удалние пользователя
-# TODO: метод для добавление победителя
-# TODO: метод для удаление пробедителя
+# TODO: метод для удаления пользователя
+# TODO: метод для добавления победителя
+# TODO: метод для удаление победителя

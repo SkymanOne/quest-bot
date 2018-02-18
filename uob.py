@@ -78,6 +78,7 @@ def get_tasks(name):
 @cli.command()
 @click.option('--name', '-n', type=str, help='Name of your game', prompt=True)
 @click.option('--level', '-l', type=int, help='Delete level of your game', prompt=True)
+@click.confirmation_option(prompt='are you sure to delete this game?')
 def del_task(name, level):
     """Delete task of your game."""
     my_loging.info('Ввод данных для удаления задания')
