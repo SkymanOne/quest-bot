@@ -38,7 +38,10 @@ def search_game(name: str):
 def delete_game(name: str):
     game = search_game(name)
     if game is not None:
-        game.delete()
+        tasks = get_tasks_of_game(name)
+        for t in tasks:
+            t.delete_instance()
+        game.delete_instance()
         my_loging.info('Игра - ' + name + ' - успешно удалена')
         return True
     else:
@@ -95,7 +98,7 @@ def get_tasks_of_game(game_name: str):
     try:
         levels = Game.get(Game.game_name == game_name).tasks
     except Game.DoesNotExist:
-        my_loging.error('Ошибка поиска задания')
+        my_loging.error('Ошибка поиска заданий')
         return False
     return levels
 
@@ -113,3 +116,8 @@ def delete_task(game_name: str, level: int):
                 t.task_level -= 1
                 t.save()
         my_loging.error('Удаление задания под номером: ' + str(level))
+
+# TODO: метод для создание пользователя
+# TODO: метод для удалние пользователя
+# TODO: метод для добавление победителя
+# TODO: метод для удаление пробедителя

@@ -7,6 +7,8 @@ from datetime import datetime
 
 import models_pack
 
+
+# TODO: доступ к удаленной бд
 db = SqliteDatabase('vneurokabot.db')
 migrator = SqliteMigrator(db)
 
