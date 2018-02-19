@@ -3,50 +3,58 @@
 from models_pack.models import *
 import my_loging
 from datetime import datetime
-import mypy
-import os
 
 
-def create_game(name, description, timer, score):
+def create_game(game_name: str, description: str, timer: str, score: int):
+    """
+    function of creating game
+
+    :param game_name: name of your game
+    :param description: description of game
+    :param timer: time, when game will work
+    :param score: start score
+    :return: object of created game or None, if there was errors
+    """
     my_loging.info('Вызов метода создания игры')
     try:
-        Game.create(game_name=name, game_description=description,
+        Game.create(game_name=game_name, game_description=description,
                     game_timer=timer, max_score=score)
     except Exception:
-        my_loging.error('Ошибка создания игры: ' + name)
+        my_loging.error('Ошибка создания игры: ' + game_name)
     else:
-        my_loging.info('Создана игра: ' + name
+        my_loging.info('Создана игра: ' + game_name
                        + ' - описание: ' + description
                        + ' - таймер: ' + str(timer) + ' макс. счет: ' + str(score))
 
 
-def search_game(name: str):
-    my_loging.info('Вызов метода поиск игры')
+def search_game(game_name: str):
     """
+        searching game in database, who was connect
 
-    :param name: string name of your game
-    :return: None, if game was not found
-    :return: object of Game
-    """
+        :param game_name: string name of your game
+        :return: None, if game was not found
+        :return: object of Game
+        """
+    my_loging.info('Вызов метода поиск игры')
     try:
-        game = Game.get(Game.game_name == name)
-        my_loging.warning('Игра ' + name + ' найдена')
+        game = Game.get(Game.game_name == game_name)
+        my_loging.info('Игра {name} найдена в базе данных'.format(name=game_name))
     except DoesNotExist:
-        my_loging.error('Игра ' + name + ' не найдена')
+        my_loging.error('Игра {name} не найдена в базе данных'.format(name=game_name))
         return None
     else:
         return game
 
 
-def delete_game(name: str):
+def delete_game(game_name: str):
     my_loging.info('Вызов метода удаления игры')
-    game = search_game(name)
+    game = search_game(game_name)
     if game is not None:
-        tasks = get_tasks_of_game(name)
+        tasks = get_tasks_of_game(game_name)
         for t in tasks:
             t.delete_instance()
         game.delete_instance()
-        my_loging.info('Игра - ' + name + ' - успешно удалена')
+        my_loging.info('Игра - ' + game_name + ' - успешно удалена')
         return True
     else:
         my_loging.error('Ошибка удаление игры')
@@ -112,12 +120,12 @@ def get_tasks_of_game(game_name: str):
 
 def delete_task(game_name: str, level: int):
     my_loging.info('Вызов метода удаления задания')
-    task = get_task(game_name, level)
-    if task is None:
+    deleting_task = get_task(game_name, level)
+    if deleting_task is None:
         my_loging.error('Ошибка удаление задания под номером: ' + str(level))
         return False
     else:
-        task.delete_instance()
+        deleting_task.delete_instance()
         tasks = get_tasks_of_game(game_name)
         for t in tasks:
             if t.task_level > level:
@@ -126,15 +134,15 @@ def delete_task(game_name: str, level: int):
         my_loging.error('Удаление задания под номером: ' + str(level))
 
 
-def create_user(name: str, telegram_id: int, game_name: str, game_start=None):
+def create_user(user_name: str, telegram_id: int, game_name: str, game_start=None):
     my_loging.info('Вызов метода создания пользователя')
     game = search_game(game_name)
     if game is not None:
         try:
             my_loging.info('Регистрация нового пользователя')
-            User.create(user_name=name, user_telegram_id=telegram_id,
+            User.create(user_name=user_name, user_telegram_id=telegram_id,
                         user_current_game=game, user_game_start=game_start)
-            my_loging.info('Пользователь ' + name + ' успешно зарегистрирован')
+            my_loging.info('Пользователь ' + user_name + ' успешно зарегистрирован')
             return True
         except Exception:
             my_loging.error('Ошибка регистрации нового пользователя')
@@ -175,11 +183,44 @@ def create_winner(user_telegram_id: int, game_name: str, best_time: datetime):
     if winner is not None and game is not None:
         Winner.create(winner_user=winner, winner_game=game, best_time=best_time)
         my_loging.info('Победитель в игре ' + game_name + ' с id ' + str(user_telegram_id) +
-                       ' pуспешно зарегистрирован')
+                       ' успешно зарегистрирован')
         return True
     else:
         my_loging.error('Ошибка добавления победителя')
         return False
 
-# TODO: метод для добавления победителя
-# TODO: метод для удаление победителя
+
+def get_winner(user_telegram_id: int, game_name: str):
+    global name
+    my_loging.info('Вызов метода для поиска победителя')
+    user = get_user(user_telegram_id)
+    game = search_game(game_name)
+    if user is not None and game is not None:
+        try:
+            name = user.user_name
+            my_loging.info('Поиск победителя в базе данных')
+            winner = Winner.get(Winner.winner_user == user and Winner.winner_game == game)
+        except DoesNotExist:
+            my_loging.error('Победитель {name} не найден в базе даных'.format(name=name))
+            return None
+        else:
+            my_loging.info('Победитель {name} найден в базе даных'.format(name=name))
+            return winner
+    else:
+        my_loging.error('Ошибка поиска победителя {name} в базе данных'.format(name=name))
+        return None
+
+
+def delete_winner(user_telegram_id: int, game_name: str):
+    global name
+    my_loging.info('Вызов метода для удаления победителя')
+    winner = get_winner(user_telegram_id, game_name)
+    if winner is not None:
+        name = winner.winner_user.user_name
+        my_loging.info('Удаление победителя {name}'.format(name=name))
+        winner.delete_instance()
+        my_loging.warning('Победитель {name} успешно удален'.format(name=name))
+        return True
+    else:
+        my_loging.error('Ошибка удаления победителя с id - {id}'.format(id=user_telegram_id))
+        return False
