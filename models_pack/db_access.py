@@ -2,6 +2,7 @@
 # -*- coding: utf8 -*-
 from models_pack.models import *
 import my_loging
+from datetime import datetime
 import mypy
 import os
 
@@ -125,7 +126,7 @@ def delete_task(game_name: str, level: int):
         my_loging.error('Удаление задания под номером: ' + str(level))
 
 
-def create_user(name, telegram_id, game_name, game_start=None):
+def create_user(name: str, telegram_id: int, game_name: str, game_start=None):
     my_loging.info('Вызов метода создания пользователя')
     game = search_game(game_name)
     if game is not None:
@@ -142,7 +143,7 @@ def create_user(name, telegram_id, game_name, game_start=None):
         return False
 
 
-def get_user(telegram_id):
+def get_user(telegram_id: int):
     my_loging.info('Вызов метода для получение пользователя')
     try:
         my_loging.info('Поиск пользователя с id ' + str(telegram_id) + ' в базе данных')
@@ -154,8 +155,7 @@ def get_user(telegram_id):
         return user
 
 
-# TODO: метод для удаления пользователя
-def delete_user(telegram_id):
+def delete_user(telegram_id: int):
     my_loging.info('Вызов метода для удаления пользователя')
     user = get_user(telegram_id)
     if user is not None:
@@ -166,5 +166,20 @@ def delete_user(telegram_id):
     else:
         my_loging.error('Ошибка удаления пользователя')
         return False
+
+
+def create_winner(user_telegram_id: int, game_name: str, best_time: datetime):
+    my_loging.info('Вызов метода для добавления победителя')
+    winner = get_user(user_telegram_id)
+    game = search_game(game_name)
+    if winner is not None and game is not None:
+        Winner.create(winner_user=winner, winner_game=game, best_time=best_time)
+        my_loging.info('Победитель в игре ' + game_name + ' с id ' + str(user_telegram_id) +
+                       ' pуспешно зарегистрирован')
+        return True
+    else:
+        my_loging.error('Ошибка добавления победителя')
+        return False
+
 # TODO: метод для добавления победителя
 # TODO: метод для удаление победителя
