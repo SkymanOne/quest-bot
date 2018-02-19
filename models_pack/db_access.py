@@ -31,7 +31,7 @@ def search_game(name: str):
         game = Game.get(Game.game_name == name)
         my_loging.warning('Игра ' + name + ' найдена')
     except DoesNotExist:
-        my_loging.warning('Игра ' + name + ' не найдена')
+        my_loging.error('Игра ' + name + ' не найдена')
         return None
     else:
         return game
@@ -153,6 +153,18 @@ def get_user(telegram_id):
     else:
         return user
 
+
 # TODO: метод для удаления пользователя
+def delete_user(telegram_id):
+    my_loging.info('Вызов метода для удаления пользователя')
+    user = get_user(telegram_id)
+    if user is not None:
+        my_loging.warning('удаление пользваотеля с id ' + str(telegram_id))
+        user.delete_instance()
+        my_loging.info('пользователь удален')
+        return True
+    else:
+        my_loging.error('Ошибка удаления пользователя')
+        return False
 # TODO: метод для добавления победителя
 # TODO: метод для удаление победителя
