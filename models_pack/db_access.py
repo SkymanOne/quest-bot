@@ -46,6 +46,22 @@ def search_game(game_name: str):
         return game
 
 
+def get_all_games():
+    """
+    get list of all games in app.
+
+    :return: list of all games or None
+    """
+    my_loging.info('Вызов метода для получения списка всех игр.')
+    try:
+        games = Game.select()
+        my_loging.info('Получение игр из базы данных')
+        return games
+    except DoesNotExist:
+        my_loging.error('Ошибка получения игр')
+        return None
+
+
 def delete_game(game_name: str):
     my_loging.info('Вызов метода удаления игры')
     game = search_game(game_name)
@@ -161,6 +177,40 @@ def get_user(telegram_id: int):
         return None
     else:
         return user
+
+
+def get_all_users():
+    """
+    Get all users in app from db.
+
+    :return: list of all users or None
+    """
+    my_loging.info('Вызов метод для получения списка всех пользователей')
+    try:
+        my_loging.info('получение списка всех пользователей')
+        users = User.select()
+        return users
+    except DoesNotExist:
+        my_loging.error('Ошибка получения списка пользователей')
+
+
+def get_users_of_game(game_name: str):
+    """
+    func., who select users from db
+
+    :param game_name:
+    :return: list of users in game or None, if game wasn't found
+    """
+    my_loging.info('Вызов метода для получения пользователей в игре')
+    game = search_game(game_name)
+    if game is not None:
+        my_loging.info('Поиск игроков...')
+        users = User.select(User.user_current_game == game_name)
+        my_loging.info('Игроки найдены в игре {game}'.format(game=game_name))
+        return users
+    else:
+        my_loging.error('Ошибка поиска игроков в базе данных (игра не найдена)')
+        return None
 
 
 def delete_user(telegram_id: int):
