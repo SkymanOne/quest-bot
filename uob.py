@@ -5,9 +5,34 @@ import my_loging
 from models_pack import db_access
 
 
+def readfile(path):
+    if path is not None:
+        global fin
+        try:
+            fin = open(path, 'rb')
+            img = fin.read()
+            return img
+        except IOError:
+            return None
+        finally:
+            if fin:
+                fin.close()
+    else:
+        return None
+
+
 @click.group()
 def cli():
     pass
+
+
+@cli.command()
+def init():
+    result = db_access.init_db()
+    if result is True:
+        click.echo('Иницилизация базы данных прошла успешно')
+    elif result is False:
+        click.echo('Ошибка иницилизации базы данных')
 
 
 @cli.command()
@@ -46,7 +71,11 @@ def del_game(name):
 def reg_task(game_name, text, answer, bonus):
     """Add task for game."""
     my_loging.info('Ввод данных задания для регистрации')
-    result = db_access.create_task(text, answer, game_name, bonus)
+    path_for_photo = click.prompt('Insert path to photo', type=str, default=None)
+    photo = readfile(path_for_photo)
+    path_for_file = click.prompt('Insert path to file', type=str, default=None, )
+    file = readfile(path_for_file)
+    result = db_access.create_task(text, answer, game_name, bonus, photo, file)
     if result is not None:
         click.echo('Задание  для игры ' + game_name +
                    ' успешно добавлено')

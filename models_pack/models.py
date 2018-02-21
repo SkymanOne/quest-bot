@@ -1,16 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf8 -*-
 from peewee import *
-from playhouse.migrate import *
-from playhouse.fields import *
 from datetime import datetime
+import configparser
 
-import models_pack
-
-
-# TODO: доступ к удаленной бд
-db = SqliteDatabase('vneurokabot.db')
-migrator = SqliteMigrator(db)
+parser = configparser.ConfigParser()
+parser.read('config.ini')
+path_to_db = parser['DATABASE']['path']
+db = SqliteDatabase(path_to_db)
 
 
 class BaseModel(Model):

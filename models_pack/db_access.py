@@ -5,6 +5,23 @@ import my_loging
 from datetime import datetime
 
 
+def init_db():
+    my_loging.info('Иницилизация базы данных')
+    try:
+        db.create_tables([
+            Game,
+            Task,
+            User,
+            Winner,
+            Task.task_game.get_through_model()
+        ], safe=True)
+        my_loging.info('Иницилизация базы данных прошла успешно')
+        return True
+    except:
+        my_loging.error('Ошибка иницилизации базы данных')
+        return False
+
+
 def create_game(game_name: str, description: str, timer: str, score: int):
     """
     function of creating game
@@ -68,6 +85,7 @@ def delete_game(game_name: str):
     if game is not None:
         tasks = get_tasks_of_game(game_name)
         for t in tasks:
+            t.task_game.remove(game)
             t.delete_instance()
         game.delete_instance()
         my_loging.info('Игра - ' + game_name + ' - успешно удалена')
@@ -88,7 +106,7 @@ def create_task(text: str, answer: str, game_name: str,
             new_task = Task.create(task_text=text, task_answer=answer,
                                    task_level=level, task_bonus=bonus,
                                    task_photo=photo, task_file=file)
-            new_task.task_game.add([game])
+            game.tasks.add(new_task)
             game.max_score += bonus
             game.save()
             new_task.save()
@@ -96,8 +114,8 @@ def create_task(text: str, answer: str, game_name: str,
         else:
             my_loging.error('Ошибка создания задания')
             return None
-    except Exception:
-        my_loging.error('Ошибка создания создания')
+    except DoesNotExist:
+        my_loging.error('Ошибка создания задания')
         return None
     else:
         return new_task
@@ -141,13 +159,14 @@ def delete_task(game_name: str, level: int):
         my_loging.error('Ошибка удаление задания под номером: ' + str(level))
         return False
     else:
+        deleting_task.task_game.remove(search_game(game_name))
         deleting_task.delete_instance()
         tasks = get_tasks_of_game(game_name)
         for t in tasks:
             if t.task_level > level:
                 t.task_level -= 1
                 t.save()
-        my_loging.error('Удаление задания под номером: ' + str(level))
+        my_loging.warning('Удалено задания под номером: ' + str(level))
 
 
 def create_user(user_name: str, telegram_id: int, game_name: str, game_start=None):

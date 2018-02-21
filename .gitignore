@@ -118,3 +118,7 @@ venv.bak/
 vneurokabot.db
 /models_pack/vneurokabot.db
 /testvenv/
+
+*.ini
+
+*.db
