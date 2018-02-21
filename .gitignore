@@ -122,3 +122,7 @@ vneurokabot.db
 *.ini
 
 *.db
+
+requirements.txt
+
+uob.pyz

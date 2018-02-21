@@ -6,7 +6,8 @@ from datetime import datetime
 
 
 def init_db():
-    my_loging.info('Иницилизация базы данных')
+    my_loging.info('Инициализация базы данных по пути: {path}'
+                   .format(path=path_to_db))
     try:
         db.create_tables([
             Game,
@@ -15,10 +16,10 @@ def init_db():
             Winner,
             Task.task_game.get_through_model()
         ], safe=True)
-        my_loging.info('Иницилизация базы данных прошла успешно')
+        my_loging.info('Инициализация базы данных прошла успешно')
         return True
     except:
-        my_loging.error('Ошибка иницилизации базы данных')
+        my_loging.error('Ошибка инициализация базы данных')
         return False
 
 
