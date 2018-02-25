@@ -110,11 +110,22 @@ def get_tasks(name):
 @click.confirmation_option(prompt='are you sure to delete this game?')
 def del_task(name, level):
     """Delete task of your game."""
-    my_loging.info('Ввод данных для удаления задания')
+    my_loging.warning('Ввод данных для удаления задания')
     if db_access.delete_task(name, level) is False:
         click.echo('Ошибка удаления задания')
     else:
         click.echo('Уровень ' + str(level) + ' успешно удален')
+
+
+@cli.command()
+@click.option('--id_user', '-i', type=int, help='Delete user about id', prompt=True)
+@click.confirmation_option(prompt='are you sure to delete this user?')
+def del_user(id_user):
+    my_loging.warning('Ввод данных для удаления пользователя')
+    if db_access.delete_user(id_user) is False:
+        click.echo('Ошибка удаления пользователя')
+    else:
+        click.echo('Пользователь с id ' + str(id_user) + ' успешно удален')
 
 
 if __name__ == '__main__':
