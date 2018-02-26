@@ -248,6 +248,21 @@ def change_user_game(telegram_id: int, new_game_name: str):
         return False
 
 
+def change_user_level(telegram_id: int, set_level: int):
+    my_loging.info('Вызов метода для изменения текущего уровня игры у пользователя с id: {tel_id}'
+                   .format(tel_id=telegram_id))
+    user = get_user(telegram_id)
+    if user is not None:
+        user.user_game_level = set_level
+        user.save()
+        my_loging.info('Успешное обновление уровня пользователя')
+        return True
+    else:
+        my_loging.error('Ошибка изменения текущего уровня игры у пользователя с id: {tel_id}'
+                        .format(tel_id=telegram_id))
+        return False
+
+
 def delete_user(telegram_id: int):
     my_loging.info('Вызов метода для удаления пользователя')
     user = get_user(telegram_id)
