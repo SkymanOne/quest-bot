@@ -233,6 +233,21 @@ def get_users_of_game(game_name: str):
         return None
 
 
+def change_user_game(telegram_id: int, new_game_name: str):
+    my_loging.info('Вызов метода для изменения игры')
+    user = get_user(telegram_id)
+    game = search_game(new_game_name)
+    if user is not None and game is not None:
+        my_loging.info('Обновление текущей игры пользователя - {user}'.format(user=user.user_name))
+        user.user_current_game = game
+        user.save()
+        my_loging.info('Игра успешно обновлена')
+        return True
+    else:
+        my_loging.error('Ошибка обновления игры пользователя')
+        return False
+
+
 def delete_user(telegram_id: int):
     my_loging.info('Вызов метода для удаления пользователя')
     user = get_user(telegram_id)
