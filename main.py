@@ -16,8 +16,8 @@ def parse_user(message: types.Message):
 
 def get_main_markup():
     main_markup = types.ReplyKeyboardMarkup()
-    main_markup.row('Доступные игры📲', 'Лидеры по играм⚜️')
-    main_markup.row('Справка🌚')
+    main_markup.row('Начать игру⛳️', 'Лидеры по играм⚜️')
+    main_markup.row('Справка🌚', 'Рейтинг игр')
     return main_markup
 
 
@@ -39,51 +39,43 @@ def main_start(message: types.Message):
                      + ', что желаешь?', reply_markup=get_main_markup())
 
 
-@bot.message_handler(func=lambda message: message.text == 'Доступные игры📲')
-def aviable_games(message: types.Message):
-    msg = bot.send_message(message.from_user.id, 'Вот тебе список доступных игр',
-                           reply_markup=get_games_markup())
-    bot.register_next_step_handler(msg, game_info)
+@bot.message_handler(func=lambda message: message.text == 'Начать игру⛳️')
+@bot.message_handler(func=lambda message: message.text == 'Рейтинг игр')
+def show_games(message: types.Message):
+    if message.text == 'Начать игру⛳️':
+        list_of_games = db_access.get_all_games()
+        for game in list_of_games:
+            text = '{gname}\n\n{gtext}'.format(gname=game.game_name,
+                                               gtext=game.game_description)
+            bot.send_message(message.from_user.id, text)
+        msg = bot.send_message(message.from_user.id, 'Выбери игру для начала',
+                               reply_markup=get_games_markup())
+        bot.register_next_step_handler(msg, start_game)
+    elif message.text == 'Рейтинг игр':
+        msg = bot.send_message(message.from_user.id, 'Выбери игру',
+                               reply_markup=get_games_markup())
+        bot.register_next_step_handler(msg, rating_of_games)
 
 
-def game_info(message: types.Message):
-    if message.text == 'Главное меню✅':
-        my_loging.info('{user} -- Нажата кнопка <Главное меню✅>'.format(user=parse_user(message)))
-        bot.send_message(message.from_user.id, 'Главное меню',
+def start_game(message: types.Message):
+    game = db_access.search_game(message.text)
+    if game is None:
+        bot.send_message(message.from_user.id, 'Игру не выбрали',
                          reply_markup=get_main_markup())
     else:
-        my_loging.info('{user} -- получение информации об игре: {game_name}'.format(user=parse_user(message),
-                                                                                    game_name=message.text))
-        game = db_access.search_game(message.text)
-        if game is not None:
-            markup = types.ReplyKeyboardMarkup()
-            markup.row('Начать игру⛳️', 'Рейтинг📊')
-            markup.row('Победители', 'Доступные игры📲')
-            msg = bot.send_message(message.from_user.id, game.game_description,
-                                   reply_markup=markup)
-            bot.register_next_step_handler(msg, options_of_game)
-        else:
-            bot.send_message(message.from_user.id, 'Ошибка поиска игры')
+        pass
 
 
-def options_of_game(message: types.Message):
-    user = db_access.get_user(message.from_user.id)
-    current_game = user.user_current_game
-    if message.text == 'Начать игру⛳️':
-        user = db_access.get_user(message.from_user.id)
-        bot.send_message(message.from_user.id, 'Ткест')
-        if user is None:
-            db_access.create_user(message.from_user.first_name, message.from_user.id, current_game.game_name)
-            bot.send_message(message.from_user.id, 'Вы зареганы')
-        else:
-            db_access.change_user_game(message.from_user.id, message.text)
-            bot.send_message(message.from_user.id, 'Игра изменена')
-    elif message.text == 'Рейтинг📊':
-        pass
-    elif message.text == 'Победители':
-        pass
+def rating_of_games(message: types.Message):
+    game = db_access.search_game(message.text)
+    if game is None:
+        bot.send_message(message.from_user.id, 'Игру не выбрали',
+                         reply_markup=get_main_markup())
     else:
-        bot.send_message(message.from_user.id, 'Доступные игры📲', reply_markup=get_games_markup())
+        pass
 
 
 bot.polling(True)
+# TODO: переписать логику: сначала выбор действия(начало игры, рейтинг и тп), а потом выбор игры
+# TODO: прописать логику перехода по уровням
+# TODO: сделать всё до четверга
