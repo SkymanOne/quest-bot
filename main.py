@@ -28,7 +28,7 @@ def get_task_markup():
     return markup
 
 
-@bot.message_handler(commands=['start'] and db_access.get_user())
+@bot.message_handler(commands=['start'])
 def main_start(message: types.Message):
     user = db_access.get_user(message.from_user.id)
     if user is None:
