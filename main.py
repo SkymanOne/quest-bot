@@ -43,13 +43,16 @@ def main_start(message: types.Message):
 @bot.message_handler(func=lambda message: message.text == 'Рейтинг игр')
 def show_games(message: types.Message):
     if message.text == 'Начать игру⛳️':
+        my_loging.info('{user} -- нажата кнопка <Начать игру⛳>'.format(user=message.from_user.first_name))
         list_of_games = db_access.get_all_games()
+        my_loging.info('{user} -- получение игр и их описание, вывод'.format(user=message.from_user.first_name))
         for game in list_of_games:
             text = '{gname}\n\n{gtext}'.format(gname=game.game_name,
                                                gtext=game.game_description)
             bot.send_message(message.from_user.id, text)
         msg = bot.send_message(message.from_user.id, 'Выбери игру для начала',
                                reply_markup=get_games_markup())
+        my_loging.info('{user} -- отрисовка меню для выбора игры для старта'.format(user=message.from_user.first_name))
         bot.register_next_step_handler(msg, start_game)
     elif message.text == 'Рейтинг игр':
         msg = bot.send_message(message.from_user.id, 'Выбери игру',
