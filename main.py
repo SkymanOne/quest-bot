@@ -49,7 +49,7 @@ def main_start(message: types.Message):
                      'you get 0 points for it😒.\n\nGood luck🤪! ' \
                      '\n\n P.S. After the last task push button <Finish off the game😒>'
             msg = bot.send_message(message.from_user.id, 'English videos\n\n' + string,
-                                   reply_markup=get_main_markup(), parse_mode='HTML')
+                                   reply_markup=get_main_markup())
             bot.register_next_step_handler(msg, options_game)
     else:
         bot.send_message(message.from_user.id, 'Are you in Game! 😎')
@@ -89,7 +89,7 @@ def check_answer(message: types.Message):
     task_level = level + 1
     lower_message = message.text.lower()
     end = db_access.get_user(message.from_user.id).user_game_end
-    if end is not None:
+    if level is not LEVEL_FIVE:
         task = db_access.get_task('English videos', task_level)
         answer = task.task_answer
         if answer == lower_message:
