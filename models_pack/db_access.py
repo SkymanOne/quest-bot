@@ -104,7 +104,7 @@ def create_task(text: str, answer: str, game_name: str,
         game = search_game(game_name)
         if game is not None:
             level = get_tasks_of_game(game_name).count() + 1
-            new_task = Task.create(task_text=text, task_answer=answer,
+            new_task = Task.create(task_text=text, task_answer=answer.lower(),
                                    task_level=level, task_bonus=bonus,
                                    task_photo=photo, task_file=file)
             game.tasks.add(new_task)
@@ -230,6 +230,30 @@ def get_users_of_game(game_name: str):
         return users
     else:
         my_loging.error('Ошибка поиска игроков в базе данных (игра не найдена)')
+        return None
+
+
+def up_user_score(telegram_id: int, changing_score: int):
+    my_loging.info('Вызов метода для изменения очков пользователя')
+    user = get_user(telegram_id)
+    if user is not None:
+        user.user_all_score += changing_score
+        user.save()
+        return True
+    else:
+        my_loging.error('Ошибка пополнения очков у пользователя (пользователь не найден)')
+        return None
+
+
+def end_user_playing(telegram_id, end_of_game: datetime):
+    my_loging.info('Вызов метода для изменения окончания игры пользователя')
+    user = get_user(telegram_id)
+    if user is not None:
+        user.user_game_end = end_of_game
+        user.save()
+        return True
+    else:
+        my_loging.error('Ошибка изменения окончания игры у пользователя (пользователь не найден)')
         return None
 
 
