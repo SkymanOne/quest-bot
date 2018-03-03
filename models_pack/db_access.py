@@ -272,6 +272,30 @@ def change_user_game(telegram_id: int, new_game_name: str):
         return False
 
 
+def down_user_tries(telegram_id: int, count):
+    my_loging.info('Вызов метода для изменения попыток пользователя')
+    user = get_user(telegram_id)
+    if user is not None:
+        user.user_tries -= count
+        user.save()
+        return True
+    else:
+        my_loging.error('Ошибка изменения попыток у пользователя (пользователь не найден)')
+        return None
+
+
+def restore_user_tries(telegram_id: int):
+    my_loging.info('Вызов метода для восстановления попыток пользователя')
+    user = get_user(telegram_id)
+    if user is not None:
+        user.user_tries = 3
+        user.save()
+        return True
+    else:
+        my_loging.error('Ошибка воссталновления попыток у пользователя (пользователь не найден)')
+        return None
+
+
 def change_user_level(telegram_id: int, set_level: int):
     my_loging.info('Вызов метода для изменения текущего уровня игры у пользователя с id: {tel_id}'
                    .format(tel_id=telegram_id))

@@ -83,29 +83,39 @@ def get_task(message: types.Message):
         bot.send_message(message.from_user.id, 'Your total score: {score}'.format(score=user.user_all_score))
 
 
+# TODO: реализовать отслеживание попыток
 def check_answer(message: types.Message):
     user = db_access.get_user(message.from_user.id)
     level = user.user_game_level
     task_level = level + 1
     lower_message = message.text.lower()
     end = db_access.get_user(message.from_user.id).user_game_end
-    if level is not LEVEL_FIVE:
-        task = db_access.get_task('English videos', task_level)
-        answer = task.task_answer
-        if answer == lower_message:
-            bot.send_message(message.from_user.id, 'That is right 😇, congratulations 🎓, you get {bonus} points'
-                             .format(bonus=task.task_bonus),
-                             reply_markup=get_task_markup())
-            db_access.change_user_level(message.from_user.id, task_level)
-            db_access.up_user_score(message.from_user.id, task.task_bonus)
+    if user.user_tries is not 0:
+        if level is not LEVEL_FIVE:
+            task = db_access.get_task('English videos', task_level)
+            answer = task.task_answer
+            if answer == lower_message:
+                bot.send_message(message.from_user.id, 'That is right 😇, congratulations 🎓, you get {bonus} points'
+                                 .format(bonus=task.task_bonus),
+                                 reply_markup=get_task_markup())
+                db_access.change_user_level(message.from_user.id, task_level)
+                db_access.up_user_score(message.from_user.id, task.task_bonus)
+                db_access.restore_user_tries(message.from_user.id)
+            else:
+                msg = bot.send_message(message.from_user.id, 'Sorry, answer is wrong. '
+                                                             'You have {tries} tries for this quest(((. I am so sorry'
+                                       .format(tries=user.user_tries-1))
+                db_access.down_user_tries(message.from_user.id, 1)
+                bot.register_next_step_handler(msg, check_answer)
         else:
-            msg = bot.send_message(message.from_user.id, 'Sorry, answer is wrong. '
-                                                         'You earned 0 points for this quest(((. I am so sorry')
-            db_access.change_user_level(message.from_user.id, task_level)
-            db_access.up_user_score(message.from_user.id, 0)
+            bot.send_message(message.from_user.id, 'You are complete the all tasks ✅, finish off the game',
+                             reply_markup=get_task_markup())
     else:
-        bot.send_message(message.from_user.id, 'You are complete the all tasks ✅, finish off the game',
+        bot.send_message(message.from_user.id, 'You have not got tries to answer',
                          reply_markup=get_task_markup())
+        db_access.change_user_level(message.from_user.id, task_level)
+        db_access.up_user_score(message.from_user.id, 0)
+        db_access.restore_user_tries(message.from_user.id)
 
 
 @bot.message_handler(func=lambda message: db_access.get_user(message.from_user.id) is not None
