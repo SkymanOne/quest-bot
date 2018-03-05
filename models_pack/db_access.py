@@ -14,6 +14,7 @@ def init_db():
             Task,
             User,
             Winner,
+            UserFinishedGame,
             Task.task_game.get_through_model()
         ], safe=True)
         my_loging.info('Инициализация базы данных прошла успешно')
@@ -329,6 +330,22 @@ def change_user_level(telegram_id: int, set_level: int):
         return False
 
 
+def change_game_of_user(telegram_id: int, set_game_name: str):
+    my_loging.info('Вызов метода для изменения текущей игры у пользователя с id: {tel_id}'
+                   .format(tel_id=telegram_id))
+    user = get_user(telegram_id)
+    game = search_game(set_game_name)
+    if user is not None and game is not None:
+        user.user_current_game = game
+        user.save()
+        my_loging.info('Успешное обновление игры пользователя')
+        return True
+    else:
+        my_loging.error('Ошибка изменения текущей игры у пользователя с id: {tel_id}'
+                        .format(tel_id=telegram_id))
+        return False
+
+
 def delete_user(telegram_id: int):
     my_loging.info('Вызов метода для удаления пользователя')
     user = get_user(telegram_id)
@@ -340,6 +357,31 @@ def delete_user(telegram_id: int):
     else:
         my_loging.error('Ошибка удаления пользователя')
         return False
+
+
+def create_user_finished_game(telegram_id: int, game: Game):
+    my_loging.info('Вызов метода для записи окончания игры пользователя')
+    user = get_user(telegram_id)
+    if game is not None and user is not None:
+        UserFinishedGame.create(user_telegram_id=telegram_id, user_game=game)
+        my_loging.info('Пользователь с id {id} успешно закончил игру'.format(id=telegram_id))
+        return True
+    else:
+        my_loging.error('Ошибка записи окончания пользователя')
+        return False
+
+
+def is_user_finished_game(telegram_id: int, game: Game):
+    try:
+        my_loging.info('Получение окончившего игру пользователя - {id}'.format(id=telegram_id))
+        user = UserFinishedGame.get(UserFinishedGame.user_telegram_id == telegram_id,
+                                    UserFinishedGame.user_game == game)
+    except DoesNotExist:
+        my_loging.info('Ошибка получения окончившего игру пользователя')
+        return False
+    else:
+        my_loging.info('Успешное получение пользователя с id - {id}'.format(id=telegram_id))
+        return True
 
 
 def create_winner(user_telegram_id: int, game_name: str, best_time: datetime):

@@ -43,6 +43,11 @@ class User(BaseModel):
     user_game_end = DateTimeField(null=True)
 
 
+class UserFinishedGame(BaseModel):
+    user_telegram_id = IntegerField()
+    user_game = ForeignKeyField(Game)
+
+
 class Winner(BaseModel):
     winner_user = ForeignKeyField(User)
     winner_game = ForeignKeyField(Game)

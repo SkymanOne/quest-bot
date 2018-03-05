@@ -28,7 +28,7 @@ def parse_user(message: types.Message):
 def get_main_markup():
     main_markup = types.ReplyKeyboardMarkup()
     main_markup.row('Aviable games📲️', 'Leaders of games⚜️')
-    main_markup.row('About🌚', 'About developer')
+    main_markup.row('About🌚', 'About developer👨‍💻')
     return main_markup
 
 
@@ -51,7 +51,7 @@ def get_task_markup():
 def get_end_markup():
     markup = types.ReplyKeyboardMarkup()
     markup.row('Leaders of game⚜️', 'About🌚')
-    markup.row('About developer')
+    markup.row('About developer👨‍💻')
     return markup
 
 
@@ -88,7 +88,6 @@ def aviable_games(message: types.Message):
 def register_in_game(message: types.Message):
     if not message.text == 'Main menu📡':
         user = db_access.get_user(message.from_user.id)
-        count_level = db_access.get_tasks_of_game(message.text).count()
         if user is None:
             game = db_access.search_game(message.text)
             if game is not None:
@@ -97,15 +96,22 @@ def register_in_game(message: types.Message):
                 bot.send_message(message.from_user.id, 'Are you in Game! 😎')
                 bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
                                  reply_markup=get_task_markup())
-        elif user.user_game_level is not count_level:
-            bot.send_message(message.from_user.id, 'Are you in Game! 😎')
-            bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
-                             reply_markup=get_task_markup())
         else:
-            bot.send_message(message.from_user.id, 'You are finished the game and save your result✅',
-                             reply_markup=get_main_markup())
+            game = db_access.search_game(message.text)
+            is_user_end_game = db_access.is_user_finished_game(message.from_user.id, game)
+            if is_user_end_game:
+                bot.send_message(message.from_user.id, 'You are finished the game and save your result✅',
+                                 reply_markup=get_main_markup())
+            else:
+                db_access.change_game_of_user(message.from_user.id, message.text)
+                db_access.change_user_level(message.from_user.id, 0)
+                bot.send_message(message.from_user.id, 'Are you in Game {game}! 😎'.format(game=game.game_name))
+                bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
+                                 reply_markup=get_task_markup())
+
     else:
-        bot.send_message(message.from_user.id, description_of_bot, reply_markup=get_main_markup())
+        bot.send_message(message.from_user.id, description_of_bot, reply_markup=get_main_markup(),
+                         parse_mode='Markdown')
 
 
 @bot.message_handler(func=lambda message: db_access.get_user(message.from_user.id) is not None
@@ -118,6 +124,9 @@ def get_task(message: types.Message):
     if level is not count_level:
         task = db_access.get_task(game.game_name, level + 1)
         bot.send_message(message.from_user.id, task.task_text)
+        if task.task_photo is not None:
+            photo = task.task_photo
+            bot.send_photo(message.from_user.id, photo)
         msg = bot.send_message(message.from_user.id, 'Send me message, pls 😇')
         bot.register_next_step_handler(msg, check_answer)
     else:
@@ -167,6 +176,8 @@ def check_answer(message: types.Message):
 def end_the_game(message: types.Message):
     result = db_access.end_user_playing(message.from_user.id, datetime.now())
     if result:
+        user = db_access.get_user(message.from_user.id)
+        db_access.create_user_finished_game(message.from_user.id, user.user_current_game)
         bot.send_message(message.from_user.id, 'You are finished the game and save your result✅',
                          reply_markup=get_main_markup())
 
@@ -185,12 +196,23 @@ def leaders_of_game(message: types.Message):
                 string += '{name} - {score} points️\n'.format(name=u.user_name, score=u.user_all_score)
         bot.send_message(message.from_user.id, string, reply_markup=get_main_markup())
     else:
-        bot.send_message(message.from_user.id, description_of_bot, reply_markup=get_main_markup())
+        bot.send_message(message.from_user.id, description_of_bot, reply_markup=get_main_markup(), parse_mode='Markdown')
 
 
-@bot.message_handler(func=lambda message: message.text == 'About developer')
+@bot.message_handler(func=lambda message: message.text == 'About developer👨‍💻')
 def about_developer(message: types.Message):
     bot.send_message(message.from_user.id, about_me)
+
+
+@bot.message_handler(func=lambda message: message.text == 'About🌚')
+def about_developer(message: types.Message):
+    mes = 'Бот для «Недели иностранных языков» в МОУ Гимназии №2. Создан на основе бота с открытом исходным кодом, ' \
+          'доступным по ссылке на странице GitHub: https://github.com/SkymanOne/quest-bot.\n\nПроект находиться в ' \
+          'стадии активного развития. \n\nВсе пожелании вы можете оставить, связавшись с разработчиком по _кнопке_ ' \
+          'ниже: '
+    markup = types.ReplyKeyboardMarkup()
+    markup.row('About developer👨‍💻', 'Main menu📡')
+    bot.send_message(message.from_user.id, mes, parse_mode='Markdown', reply_markup=markup)
 
 
 bot.polling(True)
