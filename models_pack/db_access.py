@@ -156,10 +156,13 @@ def get_tasks_of_game(game_name: str):
 def delete_task(game_name: str, level: int):
     my_loging.info('Вызов метода удаления задания')
     deleting_task = get_task(game_name, level)
-    if deleting_task is None:
+    game = search_game(game_name)
+    if deleting_task is None and game is not None:
         my_loging.error('Ошибка удаление задания под номером: ' + str(level))
         return False
     else:
+        game.max_score -= deleting_task.task_bonus
+        game.save()
         deleting_task.task_game.remove(search_game(game_name))
         deleting_task.delete_instance()
         tasks = get_tasks_of_game(game_name)
