@@ -22,9 +22,17 @@ def parse_user(message: types.Message):
 
 def get_main_markup():
     main_markup = types.ReplyKeyboardMarkup()
-    main_markup.row('Start game⛳️', 'Leaders of game⚜️')
+    main_markup.row('Aviable games📲️', 'Leaders of game⚜️')
     main_markup.row('About🌚', 'About developer')
     return main_markup
+
+
+def get_aviable_games_markup():
+    markup = types.ReplyKeyboardMarkup()
+    games = db_access.get_all_games()
+    for g in games:
+        markup.row(g.game_name)
+    return markup
 
 
 def get_task_markup():
@@ -43,19 +51,42 @@ def get_end_markup():
 
 @bot.message_handler(commands=['start'])
 def main_start(message: types.Message):
+    mes = 'Дорогой друг!\n\n Я так спешил, бежал, летел, старался успеть на Неделю иностранных языков🎓 и все-таки ' \
+          'немного припозднился😒 \n\nНо…как говорится😉, <i>better late than never!!!</i>\n У меня есть для тебя ' \
+          'сюрприз😍! '
+    user = db_access.get_user(message.from_user.id)
+    if user is None:
+        msg = bot.send_message(message.from_user.id, mes, parse_mode='HTML', reply_markup=get_main_markup())
+    else:
+        game_user = user.user_current_game
+        count_level = db_access.get_tasks_of_game(game_user.game_name).count()
+        if user.user_game_level is not count_level:
+            bot.send_message(message.from_user.id, 'Are you in Game! 😎')
+            bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
+                             reply_markup=get_task_markup())
+
+
+@bot.message_handler(func=lambda message: message.text == 'Aviable games📲️')
+def aviable_games(message: types.Message):
+    bot.send_message(message.from_user.id, 'List of aviable games: ')
+    games = db_access.get_all_games()
+    for g in games:
+        bot.send_message(message.from_user.id, '{name}\n\n {desc}'
+                         .format(name=g.game_name, desc=g.game_description))
+    msg = bot.send_message(message.from_user.id, 'Select game', reply_markup=get_aviable_games_markup())
+    bot.register_next_step_handler(msg, select_game)
+
+
+# TODO: реализовать регистрацию в игре или отмену дейстуия
+def select_game(message: types.Message):
     user = db_access.get_user(message.from_user.id)
     count_level = db_access.get_tasks_of_game('English videos').count()
     if user is None:
-        game = db_access.search_game('English videos')
+        game = db_access.search_game(message.text)
         if game is not None:
-            string = 'The game⛳️ in which you must listen to what the students😎 are talking about and guess what ' \
-                     'word is being spoken about.\nSo, you have 3 attempts to guess what word is at stake, ' \
-                     'for the right answer you get points✅.\nIf you did not manage to guess the word, ' \
-                     'you get 0 points for it😒.\n\nGood luck🤪! ' \
-                     '\n\n P.S. After the last task push button <Finish off the game😒>'
+            string = game.game_description
             msg = bot.send_message(message.from_user.id, 'English videos\n\n' + string,
                                    reply_markup=get_main_markup())
-            bot.register_next_step_handler(msg, options_game)
     elif user.user_game_level is not count_level:
         bot.send_message(message.from_user.id, 'Are you in Game! 😎')
         bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
@@ -63,16 +94,6 @@ def main_start(message: types.Message):
     else:
         bot.send_message(message.from_user.id, 'You are finished the game and save your result✅',
                          reply_markup=get_end_markup())
-
-
-def options_game(message: types.Message):
-    if message.text == 'Start game⛳️':
-        result = db_access.create_user(message.from_user.first_name, message.from_user.id, 'English videos',
-                                       game_start=datetime.now())
-        if result:
-            bot.send_message(message.from_user.id, 'Are you in Game! 😎')
-            bot.send_message(message.from_user.id, 'Click on the button to get the task 📝',
-                             reply_markup=get_task_markup())
 
 
 @bot.message_handler(func=lambda message: db_access.get_user(message.from_user.id) is not None
