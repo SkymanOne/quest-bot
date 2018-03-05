@@ -11,6 +11,10 @@ about_me = 'German Nikolishin\n\nPython and .NET developer👨‍💻\nTelegram�
                   'https://github.com/SkymanOne\nVK👉 https://vk.com/german_it\nInst👉 ' \
                   'https://www.instagram.com/german.nikolishin/\nTelegram Channel👉 https://t.me/VneUrokaDev '
 
+description_of_bot = 'Дорогой друг!\n\n Я так спешил, бежал, летел, старался успеть на Неделю иностранных языков🎓 и все-таки ' \
+      'немного припозднился😒 \n\nНо…как говорится😉, <i>better late than never!!!</i>\n У меня есть для тебя ' \
+      'сюрприз😍! '
+
 
 def parse_user(message: types.Message):
     info = '{name} {surname} ({user_id})'. \
@@ -32,6 +36,7 @@ def get_aviable_games_markup():
     games = db_access.get_all_games()
     for g in games:
         markup.row(g.game_name)
+    markup.row('Main menu📡')
     return markup
 
 
@@ -50,13 +55,11 @@ def get_end_markup():
 
 
 @bot.message_handler(commands=['start'])
+@bot.message_handler(func=lambda message: message.text == 'Main menu📡')
 def main_start(message: types.Message):
-    mes = 'Дорогой друг!\n\n Я так спешил, бежал, летел, старался успеть на Неделю иностранных языков🎓 и все-таки ' \
-          'немного припозднился😒 \n\nНо…как говорится😉, <i>better late than never!!!</i>\n У меня есть для тебя ' \
-          'сюрприз😍! '
     user = db_access.get_user(message.from_user.id)
     if user is None:
-        msg = bot.send_message(message.from_user.id, mes, parse_mode='HTML', reply_markup=get_main_markup())
+        msg = bot.send_message(message.from_user.id, description_of_bot, parse_mode='HTML', reply_markup=get_main_markup())
     else:
         game_user = user.user_current_game
         count_level = db_access.get_tasks_of_game(game_user.game_name).count()
@@ -74,35 +77,41 @@ def aviable_games(message: types.Message):
         bot.send_message(message.from_user.id, '{name}\n\n {desc}'
                          .format(name=g.game_name, desc=g.game_description))
     msg = bot.send_message(message.from_user.id, 'Select game', reply_markup=get_aviable_games_markup())
-    bot.register_next_step_handler(msg, select_game)
+    bot.register_next_step_handler(msg, register_in_game)
 
 
-# TODO: реализовать регистрацию в игре или отмену дейстуия
-def select_game(message: types.Message):
-    user = db_access.get_user(message.from_user.id)
-    count_level = db_access.get_tasks_of_game('English videos').count()
-    if user is None:
-        game = db_access.search_game(message.text)
-        if game is not None:
-            string = game.game_description
-            msg = bot.send_message(message.from_user.id, 'English videos\n\n' + string,
-                                   reply_markup=get_main_markup())
-    elif user.user_game_level is not count_level:
-        bot.send_message(message.from_user.id, 'Are you in Game! 😎')
-        bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
-                         reply_markup=get_task_markup())
+def register_in_game(message: types.Message):
+    if not message.text == 'Main menu📡':
+        user = db_access.get_user(message.from_user.id)
+        count_level = db_access.get_tasks_of_game(message.text).count()
+        if user is None:
+            game = db_access.search_game(message.text)
+            if game is not None:
+                db_access.create_user(message.from_user.first_name, message.from_user.id,
+                                      message.text, datetime.now())
+                bot.send_message(message.from_user.id, 'Are you in Game! 😎')
+                bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
+                                 reply_markup=get_task_markup())
+        elif user.user_game_level is not count_level:
+            bot.send_message(message.from_user.id, 'Are you in Game! 😎')
+            bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
+                             reply_markup=get_task_markup())
+        else:
+            bot.send_message(message.from_user.id, 'You are finished the game and save your result✅',
+                             reply_markup=get_main_markup())
     else:
-        bot.send_message(message.from_user.id, 'You are finished the game and save your result✅',
-                         reply_markup=get_end_markup())
+        bot.send_message(message.from_user.id, description_of_bot, reply_markup=get_main_markup())
 
 
 @bot.message_handler(func=lambda message: db_access.get_user(message.from_user.id) is not None
                      and message.text == 'Get task🔄')
 def get_task(message: types.Message):
-    count_level = db_access.get_tasks_of_game('English videos').count()
+    user = db_access.get_user(message.from_user.id)
+    game = user.user_current_game
+    count_level = db_access.get_tasks_of_game(game.game_name).count()
     level = db_access.get_user(message.from_user.id).user_game_level
     if level is not count_level:
-        task = db_access.get_task('English videos', level + 1)
+        task = db_access.get_task(game.game_name, level + 1)
         bot.send_message(message.from_user.id, task.task_text)
         msg = bot.send_message(message.from_user.id, 'Send me message, pls 😇')
         bot.register_next_step_handler(msg, check_answer)
@@ -113,14 +122,16 @@ def get_task(message: types.Message):
 
 
 def check_answer(message: types.Message):
-    count_level = db_access.get_tasks_of_game('English videos').count()
+    user = db_access.get_user(message.from_user.id)
+    game = user.user_current_game
+    count_level = db_access.get_tasks_of_game(game.game_name).count()
     user = db_access.get_user(message.from_user.id)
     level = user.user_game_level
     task_level = level + 1
     lower_message = message.text.lower()
     if user.user_tries is not 0:
         if level is not count_level:
-            task = db_access.get_task('English videos', task_level)
+            task = db_access.get_task(game.game_name, task_level)
             answer = task.task_answer
             if answer == lower_message:
                 bot.send_message(message.from_user.id, 'That is right 😇, congratulations 🎓, you get {bonus} points'
@@ -152,7 +163,7 @@ def end_the_game(message: types.Message):
     result = db_access.end_user_playing(message.from_user.id, datetime.now())
     if result:
         bot.send_message(message.from_user.id, 'You are finished the game and save your result✅',
-                         reply_markup=get_end_markup())
+                         reply_markup=get_main_markup())
 
 
 @bot.message_handler(func=lambda message: message.text == 'About developer')
