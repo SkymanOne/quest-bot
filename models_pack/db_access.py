@@ -217,7 +217,22 @@ def get_all_users():
         my_loging.error('Ошибка получения списка пользователей')
 
 
-def get_users_of_game(game_name: str):
+def get_all_users_by_score():
+    """
+    Get all users in app from db.
+
+    :return: list of all users or None
+    """
+    my_loging.info('Вызов метод для получения списка всех пользователей по очкам')
+    try:
+        my_loging.info('получение списка всех пользователей...')
+        users = User.select().order_by(-User.user_all_score)
+        return users
+    except DoesNotExist:
+        my_loging.error('Ошибка получения списка пользователей')
+
+
+def get_users_of_game_by_score(game_name: str):
     """
     func., who select users from db
 
@@ -228,7 +243,7 @@ def get_users_of_game(game_name: str):
     game = search_game(game_name)
     if game is not None:
         my_loging.info('Поиск игроков...')
-        users = User.select(User.user_current_game == game_name)
+        users = User.select(User.user_current_game == game).order_by(User.user_all_score)
         my_loging.info('Игроки найдены в игре {game}'.format(game=game_name))
         return users
     else:

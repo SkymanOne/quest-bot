@@ -6,14 +6,15 @@ from datetime import datetime
 
 bot = telebot.TeleBot(token)
 
-
 about_me = 'German Nikolishin\n\nPython and .NET developer👨‍💻\nTelegram👉 @german_nikolishin\nGitHub👉 ' \
-                  'https://github.com/SkymanOne\nVK👉 https://vk.com/german_it\nInst👉 ' \
-                  'https://www.instagram.com/german.nikolishin/\nTelegram Channel👉 https://t.me/VneUrokaDev '
+           'https://github.com/SkymanOne\nVK👉 https://vk.com/german_it\nInst👉 ' \
+           'https://www.instagram.com/german.nikolishin/\nTelegram Channel👉 https://t.me/VneUrokaDev '
 
-description_of_bot = 'Дорогой друг!\n\n Я так спешил, бежал, летел, старался успеть на Неделю иностранных языков🎓 и все-таки ' \
-      'немного припозднился😒 \n\nНо…как говорится😉, <i>better late than never!!!</i>\n У меня есть для тебя ' \
-      'сюрприз😍! '
+description_of_bot = 'Дорогой друг!\n\n Я так спешил, бежал, летел, старался успеть на Неделю иностранных языков🎓 и ' \
+                     'все-таки ' \
+                     'немного припозднился😒 \n\nНо…как говорится😉, _better late than never!!!_\n У меня есть ' \
+                     'для тебя ' \
+                     'сюрприз😍! '
 
 
 def parse_user(message: types.Message):
@@ -26,7 +27,7 @@ def parse_user(message: types.Message):
 
 def get_main_markup():
     main_markup = types.ReplyKeyboardMarkup()
-    main_markup.row('Aviable games📲️', 'Leaders of game⚜️')
+    main_markup.row('Aviable games📲️', 'Leaders of games⚜️')
     main_markup.row('About🌚', 'About developer')
     return main_markup
 
@@ -59,7 +60,8 @@ def get_end_markup():
 def main_start(message: types.Message):
     user = db_access.get_user(message.from_user.id)
     if user is None:
-        msg = bot.send_message(message.from_user.id, description_of_bot, parse_mode='HTML', reply_markup=get_main_markup())
+        bot.send_message(message.from_user.id, description_of_bot, parse_mode='Markdown',
+                         reply_markup=get_main_markup())
     else:
         game_user = user.user_current_game
         count_level = db_access.get_tasks_of_game(game_user.game_name).count()
@@ -67,6 +69,9 @@ def main_start(message: types.Message):
             bot.send_message(message.from_user.id, 'Are you in Game! 😎')
             bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
                              reply_markup=get_task_markup())
+        else:
+            bot.send_message(message.from_user.id, description_of_bot, parse_mode='Markdown',
+                             reply_markup=get_main_markup())
 
 
 @bot.message_handler(func=lambda message: message.text == 'Aviable games📲️')
@@ -143,7 +148,7 @@ def check_answer(message: types.Message):
             else:
                 msg = bot.send_message(message.from_user.id, 'Sorry, answer is wrong. '
                                                              'You have {tries} tries for this quest(((. I am so sorry'
-                                       .format(tries=user.user_tries-1))
+                                       .format(tries=user.user_tries - 1))
                 db_access.down_user_tries(message.from_user.id, 1)
                 bot.register_next_step_handler(msg, check_answer)
         else:
@@ -164,6 +169,23 @@ def end_the_game(message: types.Message):
     if result:
         bot.send_message(message.from_user.id, 'You are finished the game and save your result✅',
                          reply_markup=get_main_markup())
+
+
+@bot.message_handler(func=lambda message: message.text == 'Leaders of games⚜️')
+def leaders_of_game(message: types.Message):
+    if not message.text == 'Main menu📡':
+        users = db_access.get_all_users_by_score()
+        string = ''
+        i = 0
+        for u in users:
+            i += 1
+            if i is 1:
+                string += 'Leader😎: {name} - {score} points⚜️\n'.format(name=u.user_name, score=u.user_all_score)
+            else:
+                string += '{name} - {score} points️\n'.format(name=u.user_name, score=u.user_all_score)
+        bot.send_message(message.from_user.id, string, reply_markup=get_main_markup())
+    else:
+        bot.send_message(message.from_user.id, description_of_bot, reply_markup=get_main_markup())
 
 
 @bot.message_handler(func=lambda message: message.text == 'About developer')
