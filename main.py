@@ -88,17 +88,16 @@ def aviable_games(message: types.Message):
 def register_in_game(message: types.Message):
     if not message.text == 'Main menu📡':
         user = db_access.get_user(message.from_user.id)
-        if user is None:
-            game = db_access.search_game(message.text)
-            if game is not None:
-                db_access.create_user(message.from_user.first_name, message.from_user.id,
-                                      message.text, datetime.now())
-                bot.send_message(message.from_user.id, 'You are in Game! 😎')
-                bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
-                                 reply_markup=get_task_markup())
-        else:
-            game = db_access.search_game(message.text)
+        game = db_access.search_game(message.text)
+        if user is None and game is not None:
+            db_access.create_user(message.from_user.first_name, message.from_user.id,
+                                  message.text, datetime.now())
+            bot.send_message(message.from_user.id, 'You are in Game! 😎')
+            bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
+                             reply_markup=get_task_markup())
+        elif game is not None:
             is_user_end_game = db_access.is_user_finished_game(message.from_user.id, game)
+
             if is_user_end_game:
                 bot.send_message(message.from_user.id, 'You are finished the game and save your result✅',
                                  reply_markup=get_main_markup())
@@ -108,6 +107,9 @@ def register_in_game(message: types.Message):
                 bot.send_message(message.from_user.id, 'You are in Game {game}! 😎'.format(game=game.game_name))
                 bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
                                  reply_markup=get_task_markup())
+        else:
+            msg = bot.send_message(message.from_user.id, 'Game not found, please try again 👉')
+            bot.register_next_step_handler(msg, register_in_game)
 
     else:
         bot.send_message(message.from_user.id, description_of_bot, reply_markup=get_main_markup(),
@@ -127,7 +129,8 @@ def get_task(message: types.Message):
         if task.task_photo is not None:
             photo = task.task_photo
             bot.send_photo(message.from_user.id, photo)
-        msg = bot.send_message(message.from_user.id, 'Send me message, pls 😇')
+        msg = bot.send_message(message.from_user.id, 'Send me message, pls 😇',
+                               reply_markup=types.ReplyKeyboardRemove())
         bot.register_next_step_handler(msg, check_answer)
     else:
         bot.send_message(message.from_user.id, 'You are complete the all tasks ✅, finish off the game')
@@ -194,9 +197,9 @@ def leaders_of_game(message: types.Message):
                 string += 'Leader😎: {name} - {score} points⚜️\n'.format(name=u.user_name, score=u.user_all_score)
             else:
                 string += '{name} - {score} points️\n'.format(name=u.user_name, score=u.user_all_score)
-        bot.send_message(message.from_user.id, string, reply_markup=get_main_markup())
+        bot.send_message(message.from_user.id, string)
     else:
-        bot.send_message(message.from_user.id, description_of_bot, reply_markup=get_main_markup(), parse_mode='Markdown')
+        bot.send_message(message.from_user.id, description_of_bot,parse_mode='Markdown')
 
 
 @bot.message_handler(func=lambda message: message.text == 'About developer👨‍💻')
