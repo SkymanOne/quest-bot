@@ -44,13 +44,13 @@ def get_aviable_games_markup():
 def get_task_markup():
     markup = types.ReplyKeyboardMarkup()
     markup.row('Get task🔄', 'Finish off the game😒')
-    markup.row('Leaders of game⚜️', 'About🌚')
+    markup.row('Leaders of games⚜️', 'About🌚')
     return markup
 
 
 def get_end_markup():
     markup = types.ReplyKeyboardMarkup()
-    markup.row('Leaders of game⚜️', 'About🌚')
+    markup.row('Leaders of games⚜️', 'About🌚')
     markup.row('About developer👨‍💻')
     return markup
 
