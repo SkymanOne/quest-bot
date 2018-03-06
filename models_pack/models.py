@@ -37,9 +37,15 @@ class User(BaseModel):
     user_telegram_id = IntegerField()
     user_all_score = IntegerField(default=0)
     user_current_game = ForeignKeyField(Game)
+    user_tries = IntegerField(default=3)
     user_game_level = IntegerField(default=0)
     user_game_start = DateTimeField(null=True)
     user_game_end = DateTimeField(null=True)
+
+
+class UserFinishedGame(BaseModel):
+    user_telegram_id = IntegerField()
+    user_game = ForeignKeyField(Game)
 
 
 class Winner(BaseModel):
