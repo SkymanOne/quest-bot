@@ -93,7 +93,7 @@ def register_in_game(message: types.Message):
             if game is not None:
                 db_access.create_user(message.from_user.first_name, message.from_user.id,
                                       message.text, datetime.now())
-                bot.send_message(message.from_user.id, 'Are you in Game! 😎')
+                bot.send_message(message.from_user.id, 'You are in Game! 😎')
                 bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
                                  reply_markup=get_task_markup())
         else:
@@ -105,7 +105,7 @@ def register_in_game(message: types.Message):
             else:
                 db_access.change_game_of_user(message.from_user.id, message.text)
                 db_access.change_user_level(message.from_user.id, 0)
-                bot.send_message(message.from_user.id, 'Are you in Game {game}! 😎'.format(game=game.game_name))
+                bot.send_message(message.from_user.id, 'You are in Game {game}! 😎'.format(game=game.game_name))
                 bot.send_message(message.from_user.id, 'Click on the button to take action 📝',
                                  reply_markup=get_task_markup())
 
