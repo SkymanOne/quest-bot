@@ -13,8 +13,8 @@ name = "pypi"
 click = "*"
 peewee = "*"
 mypy = "*"
-pyTelegramBotAPI = "*"
-Flask = "*"
+pytelegrambotapi = "*"
+flask = "*"
 gunicorn = "*"
 
 
