@@ -4,9 +4,12 @@ from peewee import *
 from datetime import datetime
 import configparser
 
-parser = configparser.ConfigParser()
-parser.read('config.ini')
-path_to_db = parser['DATABASE']['path']
+try:
+    parser = configparser.ConfigParser()
+    parser.read('config.ini')
+    path_to_db = parser['DATABASE']['path']
+except Exception:
+    path_to_db = None
 if path_to_db is not None:
     db = SqliteDatabase(path_to_db)
 else:
