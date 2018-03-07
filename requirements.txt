@@ -1,0 +1,6 @@
+Click
+peewee
+mypy
+pytelegrambotapi
+Flask
+gunicorn
