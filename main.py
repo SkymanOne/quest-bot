@@ -2,10 +2,11 @@ import telebot
 from telebot import types
 import logging
 from models_pack import db_access
-from token_const import token
 from datetime import datetime
 import os
 from flask import Flask, request
+
+token = os.environ.get('TOKEN')
 
 bot = telebot.TeleBot(token)
 

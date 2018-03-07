@@ -7,7 +7,10 @@ import configparser
 parser = configparser.ConfigParser()
 parser.read('config.ini')
 path_to_db = parser['DATABASE']['path']
-db = SqliteDatabase(path_to_db)
+if path_to_db is not None:
+    db = SqliteDatabase(path_to_db)
+else:
+    db = SqliteDatabase('db_week.db')
 
 
 class BaseModel(Model):
