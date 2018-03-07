@@ -121,7 +121,7 @@ vneurokabot.db
 
 *.ini
 
-*.db
+bot.db
 
 requirements.txt
 
