@@ -3,10 +3,15 @@
 from peewee import *
 from datetime import datetime
 import configparser
+import os
 
-parser = configparser.ConfigParser()
-parser.read('config.ini')
-path_to_db = parser['DATABASE']['path']
+if "HEROKU" in list(os.environ.keys()):
+    # TODO: подключить базу данный heroku
+    path_to_db = None
+else:
+    parser = configparser.ConfigParser()
+    parser.read('config.ini')
+    path_to_db = parser['DATABASE']['path']
 db = SqliteDatabase(path_to_db)
 
 

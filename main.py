@@ -7,7 +7,11 @@ from datetime import datetime
 import os
 from flask import Flask, request
 
-bot = telebot.TeleBot(token)
+
+if "HEROKU" in list(os.environ.keys()):
+    token = os.environ.get('TOKEN')
+else:
+    bot = telebot.TeleBot(token)
 
 about_me = 'German Nikolishin\n\nPython and .NET developer👨‍💻\nTelegram👉 @german_nikolishin\nGitHub👉 ' \
            'https://github.com/SkymanOne\nVK👉 https://vk.com/german_it\nInst👉 ' \
@@ -232,10 +236,12 @@ if "HEROKU" in list(os.environ.keys()):
 
     @server.route("/")
     def webhook():
+        db_access.init_db()
         bot.remove_webhook()
-        bot.set_webhook(url="https://min-gallows.herokuapp.com/bot") # этот url нужно заменить на url вашего Хероку приложения
+        bot.set_webhook(url="https://quest-bot.herokuapp.com/" + token)
         return "?", 200
-    server.run(host="0.0.0.0", port=os.environ.get('PORT', 80))
+    if __name__ == '__main__':
+        server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
 else:
     # если переменной окружения HEROKU нету, значит это запуск с машины разработчика.
     # Удаляем вебхук на всякий случай, и запускаем с обычным поллингом.
